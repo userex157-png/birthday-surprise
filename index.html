@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday MAMU! 💖 Interactive Memory Vault</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,800;1,600;1,700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        mamupink: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        handwriting: ['Caveat', 'cursive'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-gentle': 'bounceGentle 2s infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-12px) rotate(3deg)' },
+                        },
+                        bounceGentle: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 15px rgba(244, 63, 94, 0.4)' },
+                            '100%': { boxShadow: '0 0 30px rgba(244, 63, 94, 0.8)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(254, 205, 211, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(244, 63, 94, 0.5);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(225, 29, 72, 0.8);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .dark .glass-card {
+            background: rgba(30, 27, 46, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(244, 63, 94, 0.2);
+        }
+        .dark .glass-nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(244, 63, 94, 0.2);
+        }
+
+        /* Romantic Letter Parchment Background */
+        .parchment {
+            background: #fffdfa;
+            background-image: radial-gradient(#e5e0d8 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+
+        /* Heart sparkle particle background canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Confetti canvas overlay */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-rose-50 via-pink-100 to-red-50 dark:from-slate-950 dark:via-purple-950 dark:to-rose-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans transition-colors duration-500 relative overflow-x-hidden">
+
+    <canvas id="particleCanvas"></canvas>
+    <canvas id="confettiCanvas"></canvas>
+
+    <header class="sticky top-0 z-40 glass-nav shadow-sm px-4 lg:px-8 py-3 transition-all duration-300">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+            <!-- Brand / Title -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-mamupink-500 to-rose-400 flex items-center justify-center text-white text-xl shadow-lg shadow-mamupink-500/30 animate-pulse">
+                    <i class="fa-solid font-heart">💖</i>
+                </div>
+                <div>
+                    <h1 class="font-serif font-bold text-xl md:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-mamupink-600 via-rose-500 to-red-600 dark:from-rose-300 dark:to-pink-400">
+                        Happy Birthday MAMU! 🎉
+                    </h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Forever Memory Vault & Celebration</p>
+                </div>
+            </div>
+
+            <!-- Internet Love Song / Melody Player Widget -->
+            <div class="flex flex-wrap items-center justify-center md:justify-end gap-2 bg-white/80 dark:bg-slate-900/80 p-2 rounded-2xl shadow-inner border border-rose-200 dark:border-rose-900/40 w-full md:w-auto">
+                <!-- Play Melody Button -->
+                <button id="btnPlayMelody" onclick="playRandomInternetLoveSong()" class="px-4 py-2 bg-gradient-to-r from-mamupink-500 to-rose-600 hover:from-mamupink-600 hover:to-rose-700 text-white font-semibold text-xs md:text-sm rounded-xl shadow-md hover:shadow-lg hover:shadow-mamupink-500/30 transition-all duration-300 active:scale-95 flex items-center gap-2">
+                    <i id="melodyPlayIcon" class="fa-solid fa-wand-magic-sparkles text-amber-300 animate-spin-slow"></i>
+                    <span id="melodyBtnText">Play Melody 🎶</span>
+                </button>
+
+                <!-- Track Info Box -->
+                <div class="flex items-center space-x-2 px-3 py-1.5 bg-rose-50 dark:bg-slate-800 rounded-xl max-w-[200px] sm:max-w-[250px] overflow-hidden text-xs">
+                    <i class="fa-solid fa-music text-mamupink-500 animate-pulse"></i>
+                    <div class="truncate">
+                        <p id="songTitle" class="font-semibold text-slate-700 dark:text-rose-200 truncate">Select "Play Melody"</p>
+                        <p id="songArtist" class="text-[10px] text-slate-400 dark:text-slate-400 truncate">Internet Love Song Stream</p>
+                    </div>
+                </div>
+
+                <!-- Player Quick Controls -->
+                <div class="flex items-center space-x-1">
+                    <button onclick="toggleAudioPlayPause()" title="Play / Pause" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition">
+                        <i id="playerPlayPauseIcon" class="fa-solid fa-play text-xs"></i>
+                    </button>
+                    <button onclick="playNextLoveSong()" title="Next Love Song" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition">
+                        <i class="fa-solid fa-forward-step text-xs"></i>
+                    </button>
+                    <!-- Floating Hearts Toggle -->
+                    <button id="btnToggleParticles" onclick="toggleParticles()" title="Toggle Hearts Animation" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-slate-700 text-mamupink-500 flex items-center justify-center transition">
+                        <i class="fa-solid fa-heart text-xs"></i>
+                    </button>
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleDarkMode()" title="Toggle Theme Mode" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-slate-700 text-amber-500 flex items-center justify-center transition">
+                        <i class="fa-solid fa-moon dark:hidden text-xs"></i>
+                        <i class="fa-solid fa-sun hidden dark:block text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Audio HTML5 element for playing songs -->
+    <audio id="internetAudioPlayer" preload="auto" crossorigin="anonymous"></audio>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 relative z-10">
+
+        <!-- Hero Card & Birthday Countdown -->
+        <section class="relative rounded-3xl p-6 sm:p-10 glass-card shadow-2xl overflow-hidden text-center border border-white/60 dark:border-slate-800">
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-mamupink-300/30 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-rose-400/30 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-mamupink-100 dark:bg-mamupink-950/80 text-mamupink-700 dark:text-mamupink-300 text-xs font-semibold mb-4 border border-mamupink-300 dark:border-mamupink-800">
+                <i class="fa-solid fa-sparkles text-amber-400"></i>
+                <span>Dedicated to My Dearest MAMU</span>
+            </div>
+
+            <h2 class="text-3xl sm:text-5xl lg:text-6xl font-serif font-extrabold text-slate-800 dark:text-white tracking-tight mb-4 leading-tight">
+                Celebrating Our Special Bond With <span class="text-transparent bg-clip-text bg-gradient-to-r from-mamupink-600 via-rose-500 to-red-500 dark:from-mamupink-400 dark:to-rose-300">MAMU</span> ✨
+            </h2>
+            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto font-normal leading-relaxed mb-8">
+                Welcome to MAMU's custom interactive memory vault. Store all your favorite photos & videos, play romantic love melodies straight from the web, and relive our sweetest relationship milestones!
+            </p>
+
+            <!-- Birthday Countdown Clock -->
+            <div class="max-w-xl mx-auto bg-gradient-to-br from-rose-500/10 via-pink-500/5 to-red-500/10 dark:from-slate-900/90 dark:to-rose-950/50 p-6 rounded-2xl border border-rose-200/60 dark:border-rose-900/50 shadow-inner mb-6">
+                <div class="flex items-center justify-between mb-3 px-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-mamupink-600 dark:text-mamupink-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-hourglass-half text-mamupink-500"></i> Birthday Countdown for MAMU
+                    </span>
+                    <button onclick="openSetCountdownModal()" class="text-[11px] text-slate-500 hover:text-mamupink-600 dark:text-slate-400 dark:hover:text-mamupink-300 underline font-medium">
+                        Change Date
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-4 gap-2 sm:gap-4 text-center">
+                    <div class="bg-white/90 dark:bg-slate-800/90 p-3 sm:p-4 rounded-xl shadow-md border border-rose-100 dark:border-slate-700">
+                        <span id="countDays" class="block text-2xl sm:text-4xl font-extrabold text-mamupink-600 dark:text-mamupink-400">00</span>
+                        <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Days</span>
+                    </div>
+                    <div class="bg-white/90 dark:bg-slate-800/90 p-3 sm:p-4 rounded-xl shadow-md border border-rose-100 dark:border-slate-700">
+                        <span id="countHours" class="block text-2xl sm:text-4xl font-extrabold text-mamupink-600 dark:text-mamupink-400">00</span>
+                        <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Hours</span>
+                    </div>
+                    <div class="bg-white/90 dark:bg-slate-800/90 p-3 sm:p-4 rounded-xl shadow-md border border-rose-100 dark:border-slate-700">
+                        <span id="countMins" class="block text-2xl sm:text-4xl font-extrabold text-mamupink-600 dark:text-mamupink-400">00</span>
+                        <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Mins</span>
+                    </div>
+                    <div class="bg-white/90 dark:bg-slate-800/90 p-3 sm:p-4 rounded-xl shadow-md border border-rose-100 dark:border-slate-700">
+                        <span id="countSecs" class="block text-2xl sm:text-4xl font-extrabold text-mamupink-600 dark:text-mamupink-400">00</span>
+                        <span class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Secs</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Links -->
+            <div class="flex flex-wrap items-center justify-center gap-3">
+                <a href="#giftSection" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 font-semibold text-xs sm:text-sm shadow-md transition-all duration-300 flex items-center gap-2">
+                    <i class="fa-solid fa-gift text-rose-400"></i> MAMU's Gift Unboxing
+                </a>
+                <a href="#mediaVaultSection" class="px-5 py-2.5 rounded-xl bg-mamupink-500 hover:bg-mamupink-600 text-white font-semibold text-xs sm:text-sm shadow-md hover:shadow-mamupink-500/40 transition-all duration-300 flex items-center gap-2">
+                    <i class="fa-solid fa-photo-film"></i> Upload Photos & Videos (Up to 50)
+                </a>
+                <a href="#memosSection" class="px-5 py-2.5 rounded-xl bg-rose-100 hover:bg-rose-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-mamupink-700 dark:text-rose-300 font-semibold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2">
+                    <i class="fa-solid fa-note-sticky text-amber-500"></i> Love Notes & Memos
+                </a>
+            </div>
+        </section>
+
+        <section id="giftSection" class="scroll-mt-24">
+            <div class="glass-card rounded-3xl p-6 sm:p-10 text-center relative overflow-hidden border border-rose-200 dark:border-slate-800 shadow-xl">
+                <div class="max-w-md mx-auto space-y-4">
+                    <span class="text-xs font-bold text-mamupink-600 dark:text-mamupink-400 uppercase tracking-widest">Surprise Box</span>
+                    <h3 class="text-2xl sm:text-3xl font-serif font-bold text-slate-800 dark:text-white">
+                        Click Below to Open MAMU's Surprise Gift! 🎁
+                    </h3>
+
+                    <!-- Interactive Bouncing Box Button -->
+                    <div class="py-6 flex justify-center">
+                        <button id="giftBoxBtn" onclick="unboxSurpriseGift()" class="group relative focus:outline-none transition-transform duration-300 hover:scale-110 active:scale-95">
+                            <!-- Glowing ring background -->
+                            <div class="absolute -inset-4 rounded-full bg-gradient-to-r from-mamupink-500 via-rose-400 to-amber-300 opacity-70 blur-xl group-hover:opacity-100 animate-pulse transition duration-500"></div>
+
+                            <div class="relative w-36 h-36 bg-gradient-to-tr from-mamupink-600 to-rose-400 rounded-3xl flex flex-col items-center justify-center shadow-2xl border-4 border-amber-300 animate-bounce-gentle">
+                                <i id="giftIcon" class="fa-solid fa-gift text-6xl text-amber-200 group-hover:rotate-12 transition-transform duration-300"></i>
+                                <span class="text-[11px] font-bold text-white mt-2 uppercase tracking-wide">Tap to Unbox</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Unlocks a custom heart-shaped Love Letter addressed to MAMU with festive confetti!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id mediaVaultSection id="mediaVaultSection" class="scroll-mt-24 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-2xl sm:text-3xl font-serif font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                        <i class="fa-solid fa-photo-film text-mamupink-500"></i>
+                        <span>MAMU's Media Gallery</span>
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                        Upload photos & videos in any format (up to 50 at once). Saved safely in IndexedDB on your device.
+                    </p>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="document.getElementById('multiFileInput').click()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-mamupink-500 to-rose-600 hover:from-mamupink-600 hover:to-rose-700 text-white text-xs sm:text-sm font-semibold shadow-md hover:shadow-mamupink-500/30 transition duration-300 flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+                        <span>Upload Media (Up to 50)</span>
+                    </button>
+                    <input type="file" id="multiFileInput" accept="image/*,video/*" multiple class="hidden" onchange="handleMultipleFileUploads(event)">
+                </div>
+            </div>
+
+            <!-- Drag & Drop Zone -->
+            <div id="dropZone" class="glass-card border-2 border-dashed border-mamupink-300 dark:border-rose-800/60 rounded-3xl p-8 text-center hover:border-mamupink-500 transition-colors duration-300 cursor-pointer relative" onclick="document.getElementById('multiFileInput').click()">
+                <div class="space-y-3 pointer-events-none">
+                    <div class="w-14 h-14 mx-auto rounded-full bg-rose-100 dark:bg-slate-800 flex items-center justify-center text-mamupink-500 text-2xl shadow-inner">
+                        <i class="fa-solid fa-images"></i>
+                    </div>
+                    <div class="text-sm font-medium text-slate-700 dark:text-slate-200">
+                        Drag & Drop or <span class="text-mamupink-600 dark:text-mamupink-400 font-bold underline">Browse Files</span>
+                    </div>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 max-w-md mx-auto">
+                        Supports images (JPG, PNG, WEBP, GIF, HEIC) & videos (MP4, WEBM, MOV, MKV, AVI, M4V). Up to 50 files selected at once!
+                    </p>
+                </div>
+                <!-- Progress Overlay -->
+                <div id="uploadProgressOverlay" class="hidden absolute inset-0 bg-white/95 dark:bg-slate-900/95 rounded-3xl flex flex-col items-center justify-center p-6 space-y-4 z-20">
+                    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-mamupink-500"></i>
+                    <p id="uploadProgressText" class="text-sm font-bold text-slate-700 dark:text-slate-200">Processing media for MAMU...</p>
+                    <div class="w-full max-w-xs bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div id="uploadProgressBar" class="bg-mamupink-500 h-full w-0 transition-all duration-200"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs & Controls -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/60 dark:bg-slate-900/60 p-3 rounded-2xl border border-rose-100 dark:border-slate-800">
+                <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+                    <button onclick="filterMedia('all')" id="filterBtnAll" class="media-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-mamupink-500 text-white transition">
+                        All (<span id="countAll">0</span>)
+                    </button>
+                    <button onclick="filterMedia('photo')" id="filterBtnPhoto" class="media-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-100 transition">
+                        Photos 📸 (<span id="countPhotos">0</span>)
+                    </button>
+                    <button onclick="filterMedia('video')" id="filterBtnVideo" class="media-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-100 transition">
+                        Videos 🎥 (<span id="countVideos">0</span>)
+                    </button>
+                    <button onclick="filterMedia('fav')" id="filterBtnFav" class="media-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-100 transition">
+                        Favorites ⭐ (<span id="countFavs">0</span>)
+                    </button>
+                </div>
+
+                <div class="flex items-center space-x-2 w-full sm:w-auto">
+                    <!-- Search Bar -->
+                    <div class="relative flex-1 sm:w-48">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                        <input type="text" id="mediaSearchInput" oninput="searchMediaCards(this.value)" placeholder="Search MAMU memories..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-rose-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mamupink-500">
+                    </div>
+                    <!-- Clear All Button -->
+                    <button onclick="confirmClearAllMedia()" title="Clear Media Library" class="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 dark:bg-red-950/50 dark:hover:bg-red-900 text-red-600 dark:text-red-300 text-xs font-semibold transition">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Media Grid Container -->
+            <div id="mediaGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 min-h-[200px]">
+                <!-- Dynamic media items injected here -->
+            </div>
+
+            <!-- Empty State Display -->
+            <div id="emptyMediaState" class="hidden text-center py-12 glass-card rounded-3xl p-8 border border-dashed border-rose-300 dark:border-slate-700">
+                <i class="fa-solid fa-photo-film text-5xl text-rose-300 dark:text-slate-600 mb-3"></i>
+                <h4 class="text-base font-bold text-slate-700 dark:text-slate-300">No media uploaded yet for MAMU</h4>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 mb-4">Click "Upload Media" to add up to 50 photos or videos directly!</p>
+                <button onclick="document.getElementById('multiFileInput').click()" class="px-4 py-2 bg-mamupink-500 text-white text-xs font-semibold rounded-xl shadow hover:bg-mamupink-600 transition">
+                    Upload Photos / Videos
+                </button>
+            </div>
+        </section>
+
+        <section id="timelineSection" class="scroll-mt-24 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-2xl sm:text-3xl font-serif font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                        <i class="fa-solid fa-timeline text-mamupink-500"></i>
+                        <span>MAMU's Love Story & Milestones</span>
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                        Our journey together—add, edit, or customize our special dates.
+                    </p>
+                </div>
+                <button onclick="openAddMilestoneModal()" class="px-4 py-2 bg-rose-100 dark:bg-slate-800 hover:bg-rose-200 dark:hover:bg-slate-700 text-mamupink-700 dark:text-rose-300 font-semibold text-xs sm:text-sm rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Add Milestone
+                </button>
+            </div>
+
+            <div id="timelineContainer" class="relative border-l-2 border-mamupink-300 dark:border-rose-900/60 ml-4 sm:ml-8 space-y-8 pl-6 sm:pl-8 py-2">
+                <!-- Timeline items rendered dynamically -->
+            </div>
+        </section>
+
+        <section id="memosSection" class="scroll-mt-24 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-2xl sm:text-3xl font-serif font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                        <i class="fa-solid fa-note-sticky text-amber-500"></i>
+                        <span>Love Notes & Memos for MAMU</span>
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                        Little sweet messages, compliments, and reminders for MAMU.
+                    </p>
+                </div>
+                <button onclick="openAddMemoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs sm:text-sm rounded-xl transition flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-pen-to-square"></i> New Love Note
+                </button>
+            </div>
+
+            <div id="memosGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Memo cards rendered dynamically -->
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-20 border-t border-rose-200/60 dark:border-slate-800 py-8 bg-white/40 dark:bg-slate-900/40 text-center text-xs text-slate-500 dark:text-slate-400 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 space-y-2">
+            <p class="font-serif text-sm font-semibold text-slate-700 dark:text-slate-200">
+                Created with Eternal Love for MAMU 💖
+            </p>
+            <p>Happy Birthday MAMU • All Photos, Videos & Memories Saved Locally</p>
+        </div>
+    </footer>
+
+
+    <!-- Modal 1: MAMU's Unboxing Love Letter Modal -->
+    <div id="modalLoveLetter" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="parchment max-w-2xl w-full rounded-3xl p-6 sm:p-10 shadow-2xl border-4 border-amber-200/80 text-slate-800 relative animate-float">
+            <button onclick="closeModal('modalLoveLetter')" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-700 flex items-center justify-center font-bold text-lg transition">
+                ✕
+            </button>
+
+            <div class="text-center space-y-4">
+                <div class="text-4xl text-mamupink-500 mb-2">💌</div>
+                <span class="text-xs uppercase font-bold text-mamupink-600 tracking-widest">Happy Birthday MAMU</span>
+                <h3 class="text-2xl sm:text-3xl font-serif font-bold text-slate-900" id="letterTitle">
+                    To My Dearest MAMU 💖
+                </h3>
+
+                <div class="w-16 h-1 bg-mamupink-400 mx-auto rounded-full"></div>
+
+                <div id="letterContentDisplay" class="font-handwriting text-2xl leading-relaxed text-slate-800 py-4 max-h-[50vh] overflow-y-auto px-2 text-left">
+                    "Happy Birthday to the most amazing, kind, and beautiful soul, MAMU! Every moment spent with you is a gift I cherish deeply. You bring warmth, laughter, and endless happiness into my life. May this year fulfill all your dreams and bring you endless joy! I love you so much today, tomorrow, and forever."
+                </div>
+
+                <!-- Letter Editable Control -->
+                <div class="pt-4 border-t border-amber-200/60 flex flex-wrap items-center justify-between gap-3">
+                    <button onclick="toggleEditLetter()" class="text-xs font-semibold text-mamupink-600 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-pen text-[10px]"></i> Edit Letter Message
+                    </button>
+                    <button onclick="closeModal('modalLoveLetter')" class="px-6 py-2 bg-gradient-to-r from-mamupink-500 to-rose-600 text-white font-semibold text-xs rounded-xl shadow hover:bg-mamupink-600 transition">
+                        Close Letter 💕
+                    </button>
+                </div>
+
+                <!-- Edit Area Hidden by default -->
+                <div id="letterEditContainer" class="hidden text-left space-y-3 pt-3">
+                    <textarea id="letterTextArea" rows="5" class="w-full p-3 border border-slate-300 rounded-xl font-handwriting text-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-mamupink-500 bg-white/90"></textarea>
+                    <button onclick="saveCustomLetter()" class="px-4 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-lg shadow">
+                        Save Letter Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Fullscreen Lightbox for Photos & Videos -->
+    <div id="modalLightbox" class="hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-lg flex flex-col justify-between p-4 sm:p-6">
+        <!-- Lightbox Top Toolbar -->
+        <div class="flex items-center justify-between text-white z-10">
+            <div class="flex items-center space-x-3">
+                <span id="lightboxBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-mamupink-500 text-white">Media</span>
+                <span id="lightboxIndex" class="text-xs text-slate-400">1 / 1</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="lightboxFavBtn" onclick="toggleLightboxFav()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-heart"></i>
+                </button>
+                <button onclick="deleteCurrentLightboxMedia()" class="w-10 h-10 rounded-full bg-red-600/60 hover:bg-red-600 text-white flex items-center justify-center transition" title="Delete Media">
+                    <i class="fa-solid fa-trash text-sm"></i>
+                </button>
+                <button onclick="closeModal('modalLightbox')" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition text-lg font-bold">
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <!-- Lightbox Main Content View -->
+        <div class="relative flex-1 flex items-center justify-center my-4 overflow-hidden">
+            <!-- Prev Button -->
+            <button onclick="navLightbox(-1)" class="absolute left-2 sm:left-4 z-20 w-12 h-12 rounded-full bg-white/10 hover:bg-white/30 text-white flex items-center justify-center transition text-lg backdrop-blur-md">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+
+            <!-- Media Container -->
+            <div id="lightboxMediaContainer" class="max-w-full max-h-full flex items-center justify-center p-2">
+                <!-- Dynamically populated with <img> or <video> -->
+            </div>
+
+            <!-- Next Button -->
+            <button onclick="navLightbox(1)" class="absolute right-2 sm:right-4 z-20 w-12 h-12 rounded-full bg-white/10 hover:bg-white/30 text-white flex items-center justify-center transition text-lg backdrop-blur-md">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Lightbox Bottom Caption Info -->
+        <div class="text-center text-white space-y-1 z-10 max-w-xl mx-auto">
+            <p id="lightboxCaption" class="text-sm font-semibold text-rose-200">MAMU's Memory</p>
+            <p id="lightboxDate" class="text-[11px] text-slate-400">Added on --</p>
+        </div>
+    </div>
+
+    <!-- Modal 3: Edit Caption Modal -->
+    <div id="modalEditCaption" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full rounded-2xl p-6 shadow-2xl border border-white/40 dark:border-slate-700 text-slate-800 dark:text-slate-100 space-y-4">
+            <h4 class="text-lg font-bold font-serif text-slate-800 dark:text-white">Edit Caption for MAMU's Media</h4>
+            <input type="text" id="editCaptionInput" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-mamupink-500">
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeModal('modalEditCaption')" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-semibold">Cancel</button>
+                <button onclick="saveEditedCaption()" class="px-4 py-2 rounded-xl bg-mamupink-500 text-white text-xs font-semibold shadow hover:bg-mamupink-600">Save Caption</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Add/Edit Milestone Modal -->
+    <div id="modalMilestone" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full rounded-2xl p-6 shadow-2xl border border-white/40 dark:border-slate-700 text-slate-800 dark:text-slate-100 space-y-4">
+            <h4 class="text-lg font-bold font-serif text-slate-800 dark:text-white" id="milestoneModalTitle">Add Love Milestone</h4>
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Milestone Title</label>
+                    <input type="text" id="milestoneTitleInput" placeholder="e.g. Our First Romantic Date" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mamupink-500">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Date</label>
+                    <input type="date" id="milestoneDateInput" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mamupink-500">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Icon Emoji</label>
+                    <input type="text" id="milestoneIconInput" placeholder="💖, 💍, ✈️, 🌹, 🍕" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mamupink-500">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Description / Story</label>
+                    <textarea id="milestoneDescInput" rows="3" placeholder="Write a sweet memory about this moment with MAMU..." class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mamupink-500"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeModal('modalMilestone')" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-semibold">Cancel</button>
+                <button onclick="saveMilestone()" class="px-4 py-2 rounded-xl bg-mamupink-500 text-white text-xs font-semibold shadow hover:bg-mamupink-600">Save Milestone</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 5: Add Sticky Love Memo Modal -->
+    <div id="modalMemo" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full rounded-2xl p-6 shadow-2xl border border-white/40 dark:border-slate-700 text-slate-800 dark:text-slate-100 space-y-4">
+            <h4 class="text-lg font-bold font-serif text-slate-800 dark:text-white">Create Love Note for MAMU</h4>
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Message for MAMU</label>
+                    <textarea id="memoTextInput" rows="4" placeholder="Write something loving for MAMU..." class="w-full p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-handwriting text-xl focus:outline-none focus:ring-2 focus:ring-mamupink-500"></textarea>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Note Theme Color</label>
+                    <div class="flex items-center gap-3 pt-1">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="memoColor" value="rose" checked class="hidden peer">
+                            <div class="w-8 h-8 rounded-full bg-rose-200 border-2 border-transparent peer-checked:border-mamupink-600 flex items-center justify-center">🌹</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="memoColor" value="amber" class="hidden peer">
+                            <div class="w-8 h-8 rounded-full bg-amber-200 border-2 border-transparent peer-checked:border-amber-600 flex items-center justify-center">🌻</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="memoColor" value="purple" class="hidden peer">
+                            <div class="w-8 h-8 rounded-full bg-purple-200 border-2 border-transparent peer-checked:border-purple-600 flex items-center justify-center">💜</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="memoColor" value="emerald" class="hidden peer">
+                            <div class="w-8 h-8 rounded-full bg-emerald-200 border-2 border-transparent peer-checked:border-emerald-600 flex items-center justify-center">🍃</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="memoColor" value="sky" class="hidden peer">
+                            <div class="w-8 h-8 rounded-full bg-sky-200 border-2 border-transparent peer-checked:border-sky-600 flex items-center justify-center">🩵</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeModal('modalMemo')" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-semibold">Cancel</button>
+                <button onclick="saveMemo()" class="px-4 py-2 rounded-xl bg-amber-500 text-white text-xs font-semibold shadow hover:bg-amber-600">Save Note</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 6: Set Birthday Target Countdown Modal -->
+    <div id="modalSetCountdown" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card max-w-sm w-full rounded-2xl p-6 shadow-2xl text-slate-800 dark:text-slate-100 space-y-4">
+            <h4 class="text-base font-bold font-serif text-slate-800 dark:text-white">Set MAMU's Birthday Date</h4>
+            <div>
+                <input type="date" id="inputTargetBirthday" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-mamupink-500">
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button onclick="closeModal('modalSetCountdown')" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-semibold">Cancel</button>
+                <button onclick="saveCountdownDate()" class="px-4 py-2 rounded-xl bg-mamupink-500 text-white text-xs font-semibold shadow">Save Date</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 7: Custom Confirmation Dialog (Replaces confirm()) -->
+    <div id="modalConfirm" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card max-w-sm w-full rounded-2xl p-6 shadow-2xl border border-white/40 dark:border-slate-700 text-slate-800 dark:text-slate-100 space-y-4 text-center">
+            <div class="w-12 h-12 mx-auto rounded-full bg-red-100 dark:bg-red-950 flex items-center justify-center text-red-500 text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h4 id="confirmModalTitle" class="text-base font-bold text-slate-800 dark:text-white">Are you sure?</h4>
+            <p id="confirmModalMsg" class="text-xs text-slate-500 dark:text-slate-400">This action cannot be undone.</p>
+
+            <div class="flex justify-center space-x-3 pt-2">
+                <button id="btnCancelConfirm" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-semibold">Cancel</button>
+                <button id="btnOkConfirm" class="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-semibold shadow hover:bg-red-700">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none"></div>
+
+    <script>
+        /* ==========================================================================
+           1. INDEXEDDB ENGINE (MEDIA VAULT FOR UP TO 50 LARGE PHOTOS & VIDEOS)
+           ========================================================================== */
+        const DB_NAME = 'MAMULoveVaultDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'mediaStore';
+        let db = null;
+
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        const store = database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        store.createIndex('type', 'type', { unique: false });
+                        store.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                };
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+                request.onerror = (e) => {
+                    console.error('IndexedDB Error:', e.target.error);
+                    reject(e.target.error);
+                };
+            });
+        }
+
+        function saveMediaToDB(mediaObj) {
+            return new Promise((resolve, reject) => {
+                if (!db) return reject('DB not initialized');
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.put(mediaObj);
+                req.onsuccess = () => resolve(true);
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        function getAllMediaFromDB() {
+            return new Promise((resolve, reject) => {
+                if (!db) return reject('DB not initialized');
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        function deleteMediaFromDB(id) {
+            return new Promise((resolve, reject) => {
+                if (!db) return reject('DB not initialized');
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.delete(id);
+                req.onsuccess = () => resolve(true);
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        function clearAllMediaFromDB() {
+            return new Promise((resolve, reject) => {
+                if (!db) return reject('DB not initialized');
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.clear();
+                req.onsuccess = () => resolve(true);
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        /* ==========================================================================
+           2. INTERNET AUDIO / LOVE MELODY PLAYER
+           ========================================================================== */
+        // Curated high quality online romantic audio streams
+        const INTERNET_LOVE_SONGS = [
+            {
+                title: "Eternal Romance Piano",
+                artist: "Love Serenade",
+                url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+            },
+            {
+                title: "Sweet Sunset Serenade for MAMU",
+                artist: "Acoustic Hearts",
+                url: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73220.mp3?filename=gentle-ocean-waves-piano-10624.mp3"
+            },
+            {
+                title: "Dreamy Love Story",
+                artist: "Romantic Orchestra",
+                url: "https://cdn.pixabay.com/download/audio/2021/09/06/audio_8239097893.mp3?filename=romantic-piano-wedding-love-11267.mp3"
+            },
+            {
+                title: "A Thousand Wishes for MAMU",
+                artist: "Soft Strings",
+                url: "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f75748.mp3?filename=soft-romantic-piano-124921.mp3"
+            },
+            {
+                title: "Forever Acoustic Guitar",
+                artist: "Love Ballad",
+                url: "https://cdn.pixabay.com/download/audio/2022/08/02/audio_884fe92342.mp3?filename=romantic-acoustic-guitar-118833.mp3"
+            }
+        ];
+
+        let currentSongIndex = -1;
+        const audioElement = document.getElementById('internetAudioPlayer');
+
+        function playRandomInternetLoveSong() {
+            if (INTERNET_LOVE_SONGS.length === 0) return;
+            let nextIndex;
+            do {
+                nextIndex = Math.floor(Math.random() * INTERNET_LOVE_SONGS.length);
+            } while (nextIndex === currentSongIndex && INTERNET_LOVE_SONGS.length > 1);
+
+            playSongAtIndex(nextIndex);
+        }
+
+        function playSongAtIndex(index) {
+            currentSongIndex = index;
+            const song = INTERNET_LOVE_SONGS[index];
+
+            audioElement.src = song.url;
+            audioElement.play().then(() => {
+                updatePlayerUI(true, song.title, song.artist);
+                showToast(`Playing "${song.title}" for MAMU 💕`, 'success');
+            }).catch(err => {
+                console.warn("Autoplay / Network block:", err);
+                updatePlayerUI(false, song.title, song.artist);
+                showToast(`Click play icon to start song playback`, 'info');
+            });
+        }
+
+        function toggleAudioPlayPause() {
+            if (!audioElement.src) {
+                playRandomInternetLoveSong();
+                return;
+            }
+            if (audioElement.paused) {
+                audioElement.play();
+                updatePlayerState(true);
+            } else {
+                audioElement.pause();
+                updatePlayerState(false);
+            }
+        }
+
+        function playNextLoveSong() {
+            if (currentSongIndex === -1) {
+                playRandomInternetLoveSong();
+            } else {
+                const nextIndex = (currentSongIndex + 1) % INTERNET_LOVE_SONGS.length;
+                playSongAtIndex(nextIndex);
+            }
+        }
+
+        function updatePlayerUI(isPlaying, title, artist) {
+            document.getElementById('songTitle').textContent = title;
+            document.getElementById('songArtist').textContent = artist;
+            updatePlayerState(isPlaying);
+        }
+
+        function updatePlayerState(isPlaying) {
+            const playPauseIcon = document.getElementById('playerPlayPauseIcon');
+            const melodyBtnText = document.getElementById('melodyBtnText');
+            if (isPlaying) {
+                playPauseIcon.className = "fa-solid fa-pause text-xs";
+                melodyBtnText.textContent = "Random Song 🔀";
+            } else {
+                playPauseIcon.className = "fa-solid fa-play text-xs";
+                melodyBtnText.textContent = "Play Melody 🎶";
+            }
+        }
+
+        audioElement.addEventListener('ended', () => {
+            playNextLoveSong();
+        });
+
+        /* ==========================================================================
+           3. MEDIA VAULT (PHOTOS & VIDEOS - UP TO 50 FILES AT ONCE)
+           ========================================================================== */
+        let mediaItems = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let currentLightboxIndex = -1;
+        let activeEditId = null;
+
+        async function handleMultipleFileUploads(e) {
+            const files = Array.from(e.target.files);
+            if (!files || files.length === 0) return;
+
+            // Enforce max 50 files limit per upload batch
+            const batch = files.slice(0, 50);
+            if (files.length > 50) {
+                showToast("Only the first 50 files were selected per batch.", "warning");
+            }
+
+            const overlay = document.getElementById('uploadProgressOverlay');
+            const bar = document.getElementById('uploadProgressBar');
+            const progressText = document.getElementById('uploadProgressText');
+            overlay.classList.remove('hidden');
+
+            let processedCount = 0;
+            for (let i = 0; i < batch.length; i++) {
+                const file = batch[i];
+                const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(file.name);
+                const isImage = file.type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg|heic|heif)$/i.test(file.name);
+
+                if (!isVideo && !isImage) continue;
+
+                const mediaObj = {
+                    id: 'media_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                    name: file.name,
+                    type: isVideo ? 'video' : 'photo',
+                    mimeType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
+                    blob: file, // Store File/Blob object directly in IndexedDB
+                    caption: file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
+                    timestamp: Date.now(),
+                    isFavorite: false
+                };
+
+                await saveMediaToDB(mediaObj);
+                processedCount++;
+
+                const pct = Math.round((processedCount / batch.length) * 100);
+                bar.style.width = pct + '%';
+                progressText.textContent = `Saving media ${processedCount} of ${batch.length} for MAMU...`;
+            }
+
+            overlay.classList.add('hidden');
+            bar.style.width = '0%';
+            e.target.value = '';
+
+            showToast(`Successfully added ${processedCount} items for MAMU! 💕`, "success");
+            await loadAllMediaFromDB();
+        }
+
+        async function loadAllMediaFromDB() {
+            try {
+                mediaItems = await getAllMediaFromDB();
+                mediaItems.sort((a, b) => b.timestamp - a.timestamp);
+                renderMediaGrid();
+            } catch (err) {
+                console.error("Failed to load media:", err);
+            }
+        }
+
+        function renderMediaGrid() {
+            const grid = document.getElementById('mediaGrid');
+            const emptyState = document.getElementById('emptyMediaState');
+            grid.innerHTML = '';
+
+            // Filter logic
+            let filtered = mediaItems.filter(item => {
+                if (currentFilter === 'photo' && item.type !== 'photo') return false;
+                if (currentFilter === 'video' && item.type !== 'video') return false;
+                if (currentFilter === 'fav' && !item.isFavorite) return false;
+                if (searchQuery) {
+                    return item.caption.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           item.name.toLowerCase().includes(searchQuery.toLowerCase());
+                }
+                return true;
+            });
+
+            // Update Counts
+            document.getElementById('countAll').textContent = mediaItems.length;
+            document.getElementById('countPhotos').textContent = mediaItems.filter(i => i.type === 'photo').length;
+            document.getElementById('countVideos').textContent = mediaItems.filter(i => i.type === 'video').length;
+            document.getElementById('countFavs').textContent = mediaItems.filter(i => i.isFavorite).length;
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filtered.forEach((item) => {
+                // Generate temporary blob URL
+                const blobUrl = URL.createObjectURL(item.blob);
+
+                const card = document.createElement('div');
+                card.className = "group glass-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-white/50 dark:border-slate-800 flex flex-col relative";
+
+                let mediaHTML = '';
+                if (item.type === 'video') {
+                    mediaHTML = `
+                        <div class="relative w-full h-48 bg-black flex items-center justify-center overflow-hidden">
+                            <video src="${blobUrl}" controls preload="metadata" class="w-full h-full object-cover"></video>
+                            <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md flex items-center gap-1">
+                                <i class="fa-solid fa-video text-rose-400"></i> Video
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    mediaHTML = `
+                        <div class="relative w-full h-48 bg-slate-100 dark:bg-slate-800 overflow-hidden cursor-pointer" onclick="openLightboxById('${item.id}')">
+                            <img src="${blobUrl}" alt="${item.caption}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-md flex items-center gap-1">
+                                <i class="fa-solid fa-camera text-rose-400"></i> Photo
+                            </span>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    ${mediaHTML}
+                    <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate" title="${item.caption}">${item.caption}</p>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500">${new Date(item.timestamp).toLocaleDateString()}</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <button onclick="toggleFavoriteMedia('${item.id}')" class="text-xs ${item.isFavorite ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500'} transition">
+                                <i class="fa-solid fa-heart"></i>
+                            </button>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="openLightboxById('${item.id}')" title="Fullscreen Lightbox" class="p-1.5 text-slate-500 hover:text-mamupink-500 text-xs">
+                                    <i class="fa-solid fa-expand"></i>
+                                </button>
+                                <button onclick="openEditCaptionModal('${item.id}', '${item.caption.replace(/'/g, "\\'")}')" title="Edit Caption" class="p-1.5 text-slate-500 hover:text-mamupink-500 text-xs">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="confirmDeleteMedia('${item.id}')" title="Delete Item" class="p-1.5 text-slate-500 hover:text-red-500 text-xs">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterMedia(type) {
+            currentFilter = type;
+            document.querySelectorAll('.media-filter-btn').forEach(btn => {
+                btn.className = 'media-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-100 transition';
+            });
+
+            if (type === 'all') document.getElementById('filterBtnAll').className = 'media-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-mamupink-500 text-white transition';
+            if (type === 'photo') document.getElementById('filterBtnPhoto').className = 'media-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-mamupink-500 text-white transition';
+            if (type === 'video') document.getElementById('filterBtnVideo').className = 'media-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-mamupink-500 text-white transition';
+            if (type === 'fav') document.getElementById('filterBtnFav').className = 'media-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-mamupink-500 text-white transition';
+
+            renderMediaGrid();
+        }
+
+        function searchMediaCards(val) {
+            searchQuery = val;
+            renderMediaGrid();
+        }
+
+        async function toggleFavoriteMedia(id) {
+            const item = mediaItems.find(i => i.id === id);
+            if (item) {
+                item.isFavorite = !item.isFavorite;
+                await saveMediaToDB(item);
+                renderMediaGrid();
+                showToast(item.isFavorite ? "Added to MAMU's favorites ⭐" : "Removed from favorites", "info");
+            }
+        }
+
+        function confirmDeleteMedia(id) {
+            openConfirmModal("Delete Media", "Are you sure you want to delete this memory from MAMU's vault?", async () => {
+                await deleteMediaFromDB(id);
+                showToast("Memory deleted from vault", "info");
+                await loadAllMediaFromDB();
+            });
+        }
+
+        function confirmClearAllMedia() {
+            if (mediaItems.length === 0) return;
+            openConfirmModal("Clear All Media", "Are you sure you want to delete ALL photos & videos in MAMU's vault?", async () => {
+                await clearAllMediaFromDB();
+                showToast("Media gallery cleared", "info");
+                await loadAllMediaFromDB();
+            });
+        }
+
+        function openEditCaptionModal(id, currentCaption) {
+            activeEditId = id;
+            document.getElementById('editCaptionInput').value = currentCaption;
+            openModal('modalEditCaption');
+        }
+
+        async function saveEditedCaption() {
+            const newCaption = document.getElementById('editCaptionInput').value.trim();
+            if (!newCaption || !activeEditId) return;
+
+            const item = mediaItems.find(i => i.id === activeEditId);
+            if (item) {
+                item.caption = newCaption;
+                await saveMediaToDB(item);
+                closeModal('modalEditCaption');
+                showToast("Caption updated successfully!", "success");
+                renderMediaGrid();
+            }
+        }
+
+        /* LIGHTBOX SLIDESHOW LOGIC */
+        function openLightboxById(id) {
+            const index = mediaItems.findIndex(i => i.id === id);
+            if (index !== -1) {
+                currentLightboxIndex = index;
+                renderLightbox();
+                openModal('modalLightbox');
+            }
+        }
+
+        function renderLightbox() {
+            if (currentLightboxIndex < 0 || currentLightboxIndex >= mediaItems.length) return;
+            const item = mediaItems[currentLightboxIndex];
+            const container = document.getElementById('lightboxMediaContainer');
+            const blobUrl = URL.createObjectURL(item.blob);
+
+            if (item.type === 'video') {
+                container.innerHTML = `<video src="${blobUrl}" controls autoplay class="max-w-full max-h-[75vh] rounded-2xl shadow-2xl"></video>`;
+                document.getElementById('lightboxBadge').textContent = 'Video Clip 🎥';
+            } else {
+                container.innerHTML = `<img src="${blobUrl}" alt="${item.caption}" class="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl">`;
+                document.getElementById('lightboxBadge').textContent = 'Photo 📸';
+            }
+
+            document.getElementById('lightboxIndex').textContent = `${currentLightboxIndex + 1} / ${mediaItems.length}`;
+            document.getElementById('lightboxCaption').textContent = item.caption;
+            document.getElementById('lightboxDate').textContent = `Added: ${new Date(item.timestamp).toLocaleString()}`;
+
+            const favBtn = document.getElementById('lightboxFavBtn');
+            favBtn.className = `w-10 h-10 rounded-full flex items-center justify-center transition ${item.isFavorite ? 'bg-rose-600 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`;
+        }
+
+        function navLightbox(direction) {
+            if (mediaItems.length === 0) return;
+            currentLightboxIndex = (currentLightboxIndex + direction + mediaItems.length) % mediaItems.length;
+            renderLightbox();
+        }
+
+        async function toggleLightboxFav() {
+            if (currentLightboxIndex >= 0 && currentLightboxIndex < mediaItems.length) {
+                const item = mediaItems[currentLightboxIndex];
+                await toggleFavoriteMedia(item.id);
+                renderLightbox();
+            }
+        }
+
+        async function deleteCurrentLightboxMedia() {
+            if (currentLightboxIndex >= 0 && currentLightboxIndex < mediaItems.length) {
+                const item = mediaItems[currentLightboxIndex];
+                openConfirmModal("Delete Item", "Delete this memory from lightbox?", async () => {
+                    await deleteMediaFromDB(item.id);
+                    closeModal('modalLightbox');
+                    showToast("Item deleted", "info");
+                    await loadAllMediaFromDB();
+                });
+            }
+        }
+
+        /* ==========================================================================
+           4. LOVE STORY MILESTONES (LOCAL STORAGE)
+           ========================================================================== */
+        const DEFAULT_MILESTONES = [
+            { id: 'm1', title: 'The First Day We Met', date: '2022-02-14', icon: '💖', desc: 'The beautiful day our hearts connected and a new chapter began for MAMU.' },
+            { id: 'm2', title: 'First Romantic Trip Together', date: '2023-06-20', icon: '✈️', desc: 'Exploring breathtaking places together and making unforgettable memories.' },
+            { id: 'm3', title: 'Celebrating Forever & Birthday', date: '2025-09-19', icon: '🎂', desc: 'Wishing MAMU the happiest birthday filled with love, laughter, and light!' }
+        ];
+
+        let milestones = JSON.parse(localStorage.getItem('MAMU_Milestones')) || DEFAULT_MILESTONES;
+        let activeMilestoneEditId = null;
+
+        function saveMilestonesToStorage() {
+            localStorage.setItem('MAMU_Milestones', JSON.stringify(milestones));
+            renderMilestones();
+        }
+
+        function renderMilestones() {
+            const container = document.getElementById('timelineContainer');
+            container.innerHTML = '';
+
+            milestones.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            milestones.forEach((m) => {
+                const div = document.createElement('div');
+                div.className = "relative group";
+
+                div.innerHTML = `
+                    <div class="absolute -left-[35px] sm:-left-[43px] top-1 w-8 h-8 rounded-full bg-mamupink-500 text-white flex items-center justify-center text-sm shadow-md ring-4 ring-rose-100 dark:ring-slate-900">
+                        ${m.icon || '💖'}
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition border border-white/60 dark:border-slate-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-serif font-bold text-base sm:text-lg text-slate-800 dark:text-white">${m.title}</h4>
+                            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-mamupink-700 dark:text-rose-300">
+                                ${new Date(m.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${m.desc}</p>
+                        <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                            <button onclick="openEditMilestoneModal('${m.id}')" class="text-xs text-slate-400 hover:text-mamupink-500 font-semibold">
+                                <i class="fa-solid fa-pen"></i> Edit
+                            </button>
+                            <button onclick="confirmDeleteMilestone('${m.id}')" class="text-xs text-slate-400 hover:text-red-500 font-semibold">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function openAddMilestoneModal() {
+            activeMilestoneEditId = null;
+            document.getElementById('milestoneModalTitle').textContent = "Add Love Milestone";
+            document.getElementById('milestoneTitleInput').value = "";
+            document.getElementById('milestoneDateInput').value = new Date().toISOString().split('T')[0];
+            document.getElementById('milestoneIconInput').value = "💖";
+            document.getElementById('milestoneDescInput').value = "";
+            openModal('modalMilestone');
+        }
+
+        function openEditMilestoneModal(id) {
+            const m = milestones.find(item => item.id === id);
+            if (m) {
+                activeMilestoneEditId = id;
+                document.getElementById('milestoneModalTitle').textContent = "Edit Love Milestone";
+                document.getElementById('milestoneTitleInput').value = m.title;
+                document.getElementById('milestoneDateInput').value = m.date;
+                document.getElementById('milestoneIconInput').value = m.icon;
+                document.getElementById('milestoneDescInput').value = m.desc;
+                openModal('modalMilestone');
+            }
+        }
+
+        function saveMilestone() {
+            const title = document.getElementById('milestoneTitleInput').value.trim();
+            const date = document.getElementById('milestoneDateInput').value;
+            const icon = document.getElementById('milestoneIconInput').value.trim() || "💖";
+            const desc = document.getElementById('milestoneDescInput').value.trim();
+
+            if (!title || !date) {
+                showToast("Please provide milestone title and date", "warning");
+                return;
+            }
+
+            if (activeMilestoneEditId) {
+                const index = milestones.findIndex(m => m.id === activeMilestoneEditId);
+                if (index !== -1) {
+                    milestones[index] = { id: activeMilestoneEditId, title, date, icon, desc };
+                }
+            } else {
+                milestones.push({
+                    id: 'm_' + Date.now(),
+                    title, date, icon, desc
+                });
+            }
+
+            saveMilestonesToStorage();
+            closeModal('modalMilestone');
+            showToast("Milestone saved for MAMU 💕", "success");
+        }
+
+        function confirmDeleteMilestone(id) {
+            openConfirmModal("Delete Milestone", "Remove this milestone from MAMU's love story?", () => {
+                milestones = milestones.filter(m => m.id !== id);
+                saveMilestonesToStorage();
+                showToast("Milestone deleted", "info");
+            });
+        }
+
+        /* ==========================================================================
+           5. LOVE NOTES & MEMOS (LOCAL STORAGE)
+           ========================================================================== */
+        const DEFAULT_MEMOS = [
+            { id: 'memo1', text: "MAMU, your smile brightens my entire world every single day! 😊💖", color: "rose", date: "Today" },
+            { id: 'memo2', text: "Never forget how deeply loved, cherished, and appreciated you are! 🌹", color: "amber", date: "Today" },
+            { id: 'memo3', text: "Here's to a lifetime of adventures, laughs, and warm hugs together! 🥂✨", color: "purple", date: "Today" }
+        ];
+
+        let memos = JSON.parse(localStorage.getItem('MAMU_Memos')) || DEFAULT_MEMOS;
+
+        function saveMemosToStorage() {
+            localStorage.setItem('MAMU_Memos', JSON.stringify(memos));
+            renderMemos();
+        }
+
+        function renderMemos() {
+            const grid = document.getElementById('memosGrid');
+            grid.innerHTML = '';
+
+            const colorClasses = {
+                rose: "bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-100 border-rose-300 dark:border-rose-800",
+                amber: "bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-100 border-amber-300 dark:border-amber-800",
+                purple: "bg-purple-100 dark:bg-purple-950/80 text-purple-900 dark:text-purple-100 border-purple-300 dark:border-purple-800",
+                emerald: "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-800",
+                sky: "bg-sky-100 dark:bg-sky-950/80 text-sky-900 dark:text-sky-100 border-sky-300 dark:border-sky-800",
+            };
+
+            memos.forEach((memo) => {
+                const card = document.createElement('div');
+                const theme = colorClasses[memo.color] || colorClasses.rose;
+                card.className = `p-5 rounded-2xl border ${theme} shadow-md hover:shadow-lg transition-transform hover:-translate-y-1 relative flex flex-col justify-between space-y-3 min-h-[160px]`;
+
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between text-xs opacity-75">
+                            <span class="font-bold">Note for MAMU</span>
+                            <i class="fa-solid fa-thumbtack text-rose-500"></i>
+                        </div>
+                        <p class="font-handwriting text-2xl leading-snug">${memo.text}</p>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-black/10 dark:border-white/10 text-[10px]">
+                        <span>${memo.date || ''}</span>
+                        <button onclick="confirmDeleteMemo('${memo.id}')" class="text-xs opacity-60 hover:opacity-100 text-red-600 transition">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openAddMemoModal() {
+            document.getElementById('memoTextInput').value = "";
+            openModal('modalMemo');
+        }
+
+        function saveMemo() {
+            const text = document.getElementById('memoTextInput').value.trim();
+            const color = document.querySelector('input[name="memoColor"]:checked')?.value || "rose";
+
+            if (!text) {
+                showToast("Please write a message for MAMU", "warning");
+                return;
+            }
+
+            memos.unshift({
+                id: 'memo_' + Date.now(),
+                text,
+                color,
+                date: new Date().toLocaleDateString()
+            });
+
+            saveMemosToStorage();
+            closeModal('modalMemo');
+            showToast("Love Note added for MAMU! 💕", "success");
+        }
+
+        function confirmDeleteMemo(id) {
+            openConfirmModal("Delete Love Note", "Delete this memo note?", () => {
+                memos = memos.filter(m => m.id !== id);
+                saveMemosToStorage();
+                showToast("Love note deleted", "info");
+            });
+        }
+
+        /* ==========================================================================
+           6. COUNTDOWN TIMER & GIFT UNBOXING
+           ========================================================================== */
+        let targetBirthday = localStorage.getItem('MAMU_TargetBirthday') || '2026-09-19';
+
+        function openSetCountdownModal() {
+            document.getElementById('inputTargetBirthday').value = targetBirthday;
+            openModal('modalSetCountdown');
+        }
+
+        function saveCountdownDate() {
+            const val = document.getElementById('inputTargetBirthday').value;
+            if (val) {
+                targetBirthday = val;
+                localStorage.setItem('MAMU_TargetBirthday', val);
+                closeModal('modalSetCountdown');
+                showToast("Birthday date updated for MAMU!", "success");
+                updateCountdown();
+            }
+        }
+
+        function updateCountdown() {
+            const target = new Date(targetBirthday + 'T00:00:00').getTime();
+            const now = new Date().getTime();
+            const diff = target - now;
+
+            if (diff <= 0) {
+                document.getElementById('countDays').textContent = "00";
+                document.getElementById('countHours').textContent = "00";
+                document.getElementById('countMins').textContent = "00";
+                document.getElementById('countSecs').textContent = "00";
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('countDays').textContent = days < 10 ? '0' + days : days;
+            document.getElementById('countHours').textContent = hours < 10 ? '0' + hours : hours;
+            document.getElementById('countMins').textContent = mins < 10 ? '0' + mins : mins;
+            document.getElementById('countSecs').textContent = secs < 10 ? '0' + secs : secs;
+        }
+
+        setInterval(updateCountdown, 1000);
+
+        /* GIFT UNBOXING & LOVE LETTER */
+        let customLetterMsg = localStorage.getItem('MAMU_LoveLetter') || 
+            "Happy Birthday to the most amazing, kind, and beautiful soul, MAMU! Every moment spent with you is a gift I cherish deeply. You bring warmth, laughter, and endless happiness into my life. May this year fulfill all your dreams and bring you endless joy! I love you so much today, tomorrow, and forever.";
+
+        function unboxSurpriseGift() {
+            // Trigger Confetti Canvas Animation
+            triggerConfettiExplosion();
+            
+            // Play song if not already playing
+            if (audioElement.paused) {
+                playRandomInternetLoveSong();
+            }
+
+            // Open Love Letter Modal
+            document.getElementById('letterContentDisplay').textContent = `"${customLetterMsg}"`;
+            openModal('modalLoveLetter');
+        }
+
+        function toggleEditLetter() {
+            const editArea = document.getElementById('letterEditContainer');
+            const textArea = document.getElementById('letterTextArea');
+            if (editArea.classList.contains('hidden')) {
+                textArea.value = customLetterMsg;
+                editArea.classList.remove('hidden');
+            } else {
+                editArea.classList.add('hidden');
+            }
+        }
+
+        function saveCustomLetter() {
+            const val = document.getElementById('letterTextArea').value.trim();
+            if (val) {
+                customLetterMsg = val;
+                localStorage.setItem('MAMU_LoveLetter', val);
+                document.getElementById('letterContentDisplay').textContent = `"${customLetterMsg}"`;
+                document.getElementById('letterEditContainer').classList.add('hidden');
+                showToast("Love letter updated for MAMU! 💕", "success");
+            }
+        }
+
+        /* ==========================================================================
+           7. FLOATING HEARTS & CONFETTI CANVAS ENGINE
+           ========================================================================== */
+        let particlesEnabled = true;
+        const particleCanvas = document.getElementById('particleCanvas');
+        const particleCtx = particleCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeParticleCanvas() {
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeParticleCanvas);
+        resizeParticleCanvas();
+
+        class HeartParticle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * particleCanvas.width;
+                this.y = particleCanvas.height + Math.random() * 100;
+                this.size = Math.random() * 14 + 8;
+                this.speedY = Math.random() * 1.5 + 0.5;
+                this.speedX = Math.sin(Math.random() * Math.PI) * 0.8;
+                this.opacity = Math.random() * 0.5 + 0.2;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = (Math.random() - 0.5) * 2;
+                this.color = `hsla(${Math.floor(Math.random() * 20 + 340)}, 85%, 65%, ${this.opacity})`;
+            }
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+                this.rotation += this.rotationSpeed;
+                if (this.y < -30) this.reset();
+            }
+            draw() {
+                particleCtx.save();
+                particleCtx.translate(this.x, this.y);
+                particleCtx.rotate((this.rotation * Math.PI) / 180);
+                particleCtx.fillStyle = this.color;
+                particleCtx.beginPath();
+                // Draw SVG style heart
+                const topCurveHeight = this.size * 0.3;
+                particleCtx.moveTo(0, topCurveHeight);
+                particleCtx.bezierCurveTo(0, 0, -this.size / 2, 0, -this.size / 2, topCurveHeight);
+                particleCtx.bezierCurveTo(-this.size / 2, (this.size + topCurveHeight) / 2, 0, this.size, 0, this.size);
+                particleCtx.bezierCurveTo(0, this.size, this.size / 2, (this.size + topCurveHeight) / 2, this.size / 2, topCurveHeight);
+                particleCtx.bezierCurveTo(this.size / 2, 0, 0, 0, 0, topCurveHeight);
+                particleCtx.closePath();
+                particleCtx.fill();
+                particleCtx.restore();
+            }
+        }
+
+        for (let i = 0; i < 25; i++) {
+            particles.push(new HeartParticle());
+        }
+
+        function animateParticles() {
+            particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            if (particlesEnabled) {
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        function toggleParticles() {
+            particlesEnabled = !particlesEnabled;
+            showToast(particlesEnabled ? "Floating hearts enabled 💖" : "Hearts paused", "info");
+        }
+
+        /* Confetti Engine for Unboxing Surprise */
+        const confettiCanvas = document.getElementById('confettiCanvas');
+        const confettiCtx = confettiCanvas.getContext('2d');
+        let confettiPieces = [];
+
+        function resizeConfettiCanvas() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeConfettiCanvas);
+        resizeConfettiCanvas();
+
+        function triggerConfettiExplosion() {
+            confettiPieces = [];
+            const colors = ['#f43f5e', '#fb7185', '#amber-400', '#38bdf8', '#a855f7', '#fbbf24'];
+            for (let i = 0; i < 120; i++) {
+                confettiPieces.push({
+                    x: confettiCanvas.width / 2,
+                    y: confettiCanvas.height / 2,
+                    vx: (Math.random() - 0.5) * 18,
+                    vy: (Math.random() - 0.8) * 18,
+                    size: Math.random() * 8 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rSpeed: (Math.random() - 0.5) * 10,
+                    life: 1.0
+                });
+            }
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            let active = false;
+
+            confettiPieces.forEach(p => {
+                if (p.life > 0) {
+                    active = true;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.25; // gravity
+                    p.rotation += p.rSpeed;
+                    p.life -= 0.012;
+
+                    confettiCtx.save();
+                    confettiCtx.translate(p.x, p.y);
+                    confettiCtx.rotate((p.rotation * Math.PI) / 180);
+                    confettiCtx.fillStyle = p.color;
+                    confettiCtx.globalAlpha = Math.max(p.life, 0);
+                    confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    confettiCtx.restore();
+                }
+            });
+
+            if (active) {
+                requestAnimationFrame(animateConfetti);
+            }
+        }
+
+        /* ==========================================================================
+           8. MODAL & TOAST NOTIFICATION HELPERS
+           ========================================================================== */
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            const bgMap = {
+                success: 'bg-emerald-600 text-white',
+                warning: 'bg-amber-500 text-white',
+                info: 'bg-slate-800 dark:bg-slate-700 text-white',
+            };
+
+            toast.className = `p-3 rounded-xl shadow-xl text-xs font-semibold flex items-center justify-between gap-2 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${bgMap[type] || bgMap.info}`;
+            toast.innerHTML = `
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-xs opacity-70 hover:opacity-100">✕</button>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function openConfirmModal(title, msg, onConfirm) {
+            document.getElementById('confirmModalTitle').textContent = title;
+            document.getElementById('confirmModalMsg').textContent = msg;
+
+            const modal = document.getElementById('modalConfirm');
+            const btnOk = document.getElementById('btnOkConfirm');
+            const btnCancel = document.getElementById('btnCancelConfirm');
+
+            const handleOk = () => {
+                onConfirm();
+                closeModal('modalConfirm');
+                cleanup();
+            };
+
+            const handleCancel = () => {
+                closeModal('modalConfirm');
+                cleanup();
+            };
+
+            const cleanup = () => {
+                btnOk.removeEventListener('click', handleOk);
+                btnCancel.removeEventListener('click', handleCancel);
+            };
+
+            btnOk.addEventListener('click', handleOk);
+            btnCancel.addEventListener('click', handleCancel);
+
+            openModal('modalConfirm');
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('MAMU_DarkMode', isDark ? 'enabled' : 'disabled');
+        }
+
+        if (localStorage.getItem('MAMU_DarkMode') === 'enabled') {
+            document.documentElement.classList.add('dark');
+        }
+
+        /* ==========================================================================
+           9. INITIALIZATION ON WINDOW LOAD
+           ========================================================================== */
+        window.onload = async function () {
+            // Start Canvas Heart Animation Loop
+            animateParticles();
+
+            // Initialize IndexedDB & Load Media
+            try {
+                await initIndexedDB();
+                await loadAllMediaFromDB();
+            } catch (err) {
+                console.warn("IndexedDB fallback:", err);
+            }
+
+            // Render Story & Memos
+            renderMilestones();
+            renderMemos();
+            updateCountdown();
+
+            // Drag & Drop event bindings
+            const dropZone = document.getElementById('dropZone');
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('border-mamupink-600', 'bg-rose-50/50');
+                }, false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('border-mamupink-600', 'bg-rose-50/50');
+                }, false);
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    handleMultipleFileUploads({ target: { files: files } });
+                }
+            });
+        };
+    </script>
+</body>
+</html>
