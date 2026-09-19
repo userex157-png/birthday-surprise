@@ -13,6 +13,28 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,800;1,600;1,700&display=swap" rel="stylesheet">
 
+    <!-- Firebase shared sync and media storage -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSIe9569ecVMI-UTt2TR8vXJPWrp3tO_E",
+            authDomain: "birthday-surpise.firebaseapp.com",
+            projectId: "birthday-surpise",
+            storageBucket: "birthday-surpise.firebasestorage.app",
+            messagingSenderId: "153084021252",
+            appId: "1:153084021252:web:2f15205413c60b535d4351",
+            measurementId: "G-2PQ2HNMWBE"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const firebaseAuth = firebase.auth();
+        const firebaseDb = firebase.firestore();
+        const firebaseStorage = firebase.storage();
+    </script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -714,6 +736,134 @@
             });
         }
 
+        let cloudUser = null;
+        let cloudStateRef = null;
+        let cloudMediaUnsubscribe = null;
+        let applyingRemoteState = false;
+
+        function cloudIsReady() {
+            return Boolean(cloudUser && cloudStateRef);
+        }
+
+        async function saveCloudState() {
+            if (!cloudIsReady() || applyingRemoteState) return;
+
+            await cloudStateRef.set({
+                targetBirthday,
+                milestones,
+                memos,
+                customLetterMsg,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+
+        async function uploadMediaToCloud(mediaObj) {
+            if (!cloudIsReady() || !mediaObj.blob) return;
+
+            const storageRef = firebaseStorage.ref(`media/${mediaObj.id}-${mediaObj.name}`);
+            await storageRef.put(mediaObj.blob, { contentType: mediaObj.mimeType });
+            const url = await storageRef.getDownloadURL();
+            await firebaseDb.collection('media').doc(mediaObj.id).set({
+                id: mediaObj.id,
+                name: mediaObj.name,
+                type: mediaObj.type,
+                mimeType: mediaObj.mimeType,
+                caption: mediaObj.caption,
+                timestamp: mediaObj.timestamp,
+                isFavorite: mediaObj.isFavorite,
+                url,
+                storagePath: storageRef.fullPath
+            });
+        }
+
+        async function loadCloudMedia() {
+            if (!cloudIsReady()) return false;
+
+            const snapshot = await firebaseDb.collection('media').orderBy('timestamp', 'desc').get();
+            mediaItems = snapshot.docs.map(doc => doc.data());
+            renderMediaGrid();
+            return true;
+        }
+
+        async function updateCloudMedia(mediaItem) {
+            if (!cloudIsReady()) return;
+            await firebaseDb.collection('media').doc(mediaItem.id).set({
+                caption: mediaItem.caption,
+                isFavorite: mediaItem.isFavorite
+            }, { merge: true });
+        }
+
+        async function deleteCloudMedia(mediaItem) {
+            if (!cloudIsReady()) return;
+            await firebaseDb.collection('media').doc(mediaItem.id).delete();
+            if (mediaItem.storagePath) {
+                await firebaseStorage.ref(mediaItem.storagePath).delete().catch(() => {});
+            }
+        }
+
+        async function clearCloudMedia() {
+            if (!cloudIsReady()) return;
+            const snapshot = await firebaseDb.collection('media').get();
+            const batch = firebaseDb.batch();
+            snapshot.docs.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+            await Promise.all(snapshot.docs.map(doc => {
+                const item = doc.data();
+                return item.storagePath ? firebaseStorage.ref(item.storagePath).delete().catch(() => {}) : null;
+            }));
+        }
+
+        function initFirebaseSync() {
+            firebaseAuth.onAuthStateChanged(async (user) => {
+                if (!user) return;
+
+                cloudUser = user;
+                cloudStateRef = firebaseDb.collection('vaults').doc('mamu-shared-vault');
+
+                cloudStateRef.onSnapshot(async (snapshot) => {
+                    if (!snapshot.exists) {
+                        await saveCloudState();
+                        return;
+                    }
+
+                    const remote = snapshot.data();
+                    applyingRemoteState = true;
+                    if (remote.targetBirthday) {
+                        targetBirthday = remote.targetBirthday;
+                        localStorage.setItem('MAMU_TargetBirthday', targetBirthday);
+                    }
+                    if (Array.isArray(remote.milestones)) {
+                        milestones = remote.milestones;
+                        localStorage.setItem('MAMU_Milestones', JSON.stringify(milestones));
+                        renderMilestones();
+                    }
+                    if (Array.isArray(remote.memos)) {
+                        memos = remote.memos;
+                        localStorage.setItem('MAMU_Memos', JSON.stringify(memos));
+                        renderMemos();
+                    }
+                    if (remote.customLetterMsg) {
+                        customLetterMsg = remote.customLetterMsg;
+                        localStorage.setItem('MAMU_LoveLetter', customLetterMsg);
+                    }
+                    updateCountdown();
+                    document.getElementById('letterContentDisplay').textContent = `"${customLetterMsg}"`;
+                    applyingRemoteState = false;
+                });
+
+                if (cloudMediaUnsubscribe) cloudMediaUnsubscribe();
+                cloudMediaUnsubscribe = firebaseDb.collection('media').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+                    mediaItems = snapshot.docs.map(doc => doc.data());
+                    renderMediaGrid();
+                });
+            });
+
+            firebaseAuth.signInAnonymously().catch((error) => {
+                console.error('Firebase authentication failed:', error);
+                showToast('Cloud sync is unavailable. Check Firebase Anonymous Auth.', 'warning');
+            });
+        }
+
         /* ==========================================================================
            2. INTERNET AUDIO / LOVE MELODY PLAYER
            ========================================================================== */
@@ -863,6 +1013,14 @@
                 };
 
                 await saveMediaToDB(mediaObj);
+                if (cloudIsReady()) {
+                    try {
+                        await uploadMediaToCloud(mediaObj);
+                    } catch (error) {
+                        console.error('Cloud media upload failed:', error);
+                        showToast('Saved locally, but cloud upload failed.', 'warning');
+                    }
+                }
                 processedCount++;
 
                 const pct = Math.round((processedCount / batch.length) * 100);
@@ -880,6 +1038,7 @@
 
         async function loadAllMediaFromDB() {
             try {
+                if (await loadCloudMedia()) return;
                 mediaItems = await getAllMediaFromDB();
                 mediaItems.sort((a, b) => b.timestamp - a.timestamp);
                 renderMediaGrid();
@@ -919,8 +1078,7 @@
             }
 
             filtered.forEach((item) => {
-                // Generate temporary blob URL
-                const blobUrl = URL.createObjectURL(item.blob);
+                const blobUrl = item.url || (item.blob ? URL.createObjectURL(item.blob) : '');
 
                 const card = document.createElement('div');
                 card.className = "group glass-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-white/50 dark:border-slate-800 flex flex-col relative";
@@ -998,7 +1156,8 @@
             const item = mediaItems.find(i => i.id === id);
             if (item) {
                 item.isFavorite = !item.isFavorite;
-                await saveMediaToDB(item);
+                if (item.blob) await saveMediaToDB(item);
+                await updateCloudMedia(item);
                 renderMediaGrid();
                 showToast(item.isFavorite ? "Added to MAMU's favorites ⭐" : "Removed from favorites", "info");
             }
@@ -1006,7 +1165,9 @@
 
         function confirmDeleteMedia(id) {
             openConfirmModal("Delete Media", "Are you sure you want to delete this memory from MAMU's vault?", async () => {
-                await deleteMediaFromDB(id);
+                const item = mediaItems.find(media => media.id === id);
+                if (item?.blob) await deleteMediaFromDB(id);
+                await deleteCloudMedia(item || { id });
                 showToast("Memory deleted from vault", "info");
                 await loadAllMediaFromDB();
             });
@@ -1015,7 +1176,8 @@
         function confirmClearAllMedia() {
             if (mediaItems.length === 0) return;
             openConfirmModal("Clear All Media", "Are you sure you want to delete ALL photos & videos in MAMU's vault?", async () => {
-                await clearAllMediaFromDB();
+                if (!cloudIsReady()) await clearAllMediaFromDB();
+                await clearCloudMedia();
                 showToast("Media gallery cleared", "info");
                 await loadAllMediaFromDB();
             });
@@ -1034,7 +1196,8 @@
             const item = mediaItems.find(i => i.id === activeEditId);
             if (item) {
                 item.caption = newCaption;
-                await saveMediaToDB(item);
+                if (item.blob) await saveMediaToDB(item);
+                await updateCloudMedia(item);
                 closeModal('modalEditCaption');
                 showToast("Caption updated successfully!", "success");
                 renderMediaGrid();
@@ -1055,7 +1218,7 @@
             if (currentLightboxIndex < 0 || currentLightboxIndex >= mediaItems.length) return;
             const item = mediaItems[currentLightboxIndex];
             const container = document.getElementById('lightboxMediaContainer');
-            const blobUrl = URL.createObjectURL(item.blob);
+            const blobUrl = item.url || (item.blob ? URL.createObjectURL(item.blob) : '');
 
             if (item.type === 'video') {
                 container.innerHTML = `<video src="${blobUrl}" controls autoplay class="max-w-full max-h-[75vh] rounded-2xl shadow-2xl"></video>`;
@@ -1091,7 +1254,8 @@
             if (currentLightboxIndex >= 0 && currentLightboxIndex < mediaItems.length) {
                 const item = mediaItems[currentLightboxIndex];
                 openConfirmModal("Delete Item", "Delete this memory from lightbox?", async () => {
-                    await deleteMediaFromDB(item.id);
+                    if (item.blob) await deleteMediaFromDB(item.id);
+                    await deleteCloudMedia(item);
                     closeModal('modalLightbox');
                     showToast("Item deleted", "info");
                     await loadAllMediaFromDB();
@@ -1114,6 +1278,7 @@
         function saveMilestonesToStorage() {
             localStorage.setItem('MAMU_Milestones', JSON.stringify(milestones));
             renderMilestones();
+            saveCloudState().catch(error => console.error('Milestone sync failed:', error));
         }
 
         function renderMilestones() {
@@ -1225,6 +1390,7 @@
         function saveMemosToStorage() {
             localStorage.setItem('MAMU_Memos', JSON.stringify(memos));
             renderMemos();
+            saveCloudState().catch(error => console.error('Memo sync failed:', error));
         }
 
         function renderMemos() {
@@ -1315,6 +1481,7 @@
                 closeModal('modalSetCountdown');
                 showToast("Birthday date updated for MAMU!", "success");
                 updateCountdown();
+                saveCloudState().catch(error => console.error('Countdown sync failed:', error));
             }
         }
 
@@ -1381,6 +1548,7 @@
                 document.getElementById('letterContentDisplay').textContent = `"${customLetterMsg}"`;
                 document.getElementById('letterEditContainer').classList.add('hidden');
                 showToast("Love letter updated for MAMU! 💕", "success");
+                saveCloudState().catch(error => console.error('Letter sync failed:', error));
             }
         }
 
@@ -1604,6 +1772,7 @@
         window.onload = async function () {
             // Start Canvas Heart Animation Loop
             animateParticles();
+            initFirebaseSync();
 
             // Initialize IndexedDB & Load Media
             try {
