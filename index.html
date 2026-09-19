@@ -13,26 +13,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,800;1,600;1,700&display=swap" rel="stylesheet">
 
-    <!-- Firebase shared sync and media storage -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+    <!-- Supabase realtime sync and media storage -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCSIe9569ecVMI-UTt2TR8vXJPWrp3tO_E",
-            authDomain: "birthday-surpise.firebaseapp.com",
-            projectId: "birthday-surpise",
-            storageBucket: "birthday-surpise.firebasestorage.app",
-            messagingSenderId: "153084021252",
-            appId: "1:153084021252:web:2f15205413c60b535d4351",
-            measurementId: "G-2PQ2HNMWBE"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const firebaseAuth = firebase.auth();
-        const firebaseDb = firebase.firestore();
-        const firebaseStorage = firebase.storage();
+        const SUPABASE_URL = 'https://sveqvfzznzqiruzlwpbz.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_nZJSz_1Tc_VP_P-DDY3lFw_LtERTxcS';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const ADMIN_EMAIL = 'userex157@gmail.com';
     </script>
 
@@ -747,6 +733,7 @@
         let cloudUser = null;
         let cloudStateRef = null;
         let cloudMediaUnsubscribe = null;
+        let cloudStateUnsubscribe = null;
         let applyingRemoteState = false;
         let isAdmin = false;
 
@@ -766,18 +753,15 @@
 
         async function toggleAdminAuth() {
             if (isAdmin) {
-                await firebaseAuth.signOut();
-                await firebaseAuth.signInAnonymously();
+                await supabaseClient.auth.signOut();
                 return;
             }
 
             try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                const result = await firebaseAuth.signInWithPopup(provider);
-                if (result.user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-                    await firebaseAuth.signOut();
-                    showToast(`Only ${ADMIN_EMAIL} can edit this vault.`, 'warning');
-                }
+                await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.href }
+                });
             } catch (error) {
                 console.error('Admin sign-in failed:', error);
                 showToast('Admin sign-in was cancelled or unavailable.', 'warning');
@@ -791,97 +775,78 @@
         async function saveCloudState() {
             if (!cloudIsReady() || !isAdmin || applyingRemoteState) return;
 
-            await cloudStateRef.set({
-                targetBirthday,
+            await supabaseClient.from('vault_state').upsert({
+                id: 'mamu-shared-vault',
+                target_birthday: targetBirthday,
                 milestones,
                 memos,
-                customLetterMsg,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
+                custom_letter_msg: customLetterMsg,
+                updated_at: new Date().toISOString()
+            });
         }
 
         async function uploadMediaToCloud(mediaObj) {
             if (!cloudIsReady() || !isAdmin || !mediaObj.blob) return;
 
-            const storageRef = firebaseStorage.ref(`media/${mediaObj.id}-${mediaObj.name}`);
-            await storageRef.put(mediaObj.blob, { contentType: mediaObj.mimeType });
-            const url = await storageRef.getDownloadURL();
-            await firebaseDb.collection('media').doc(mediaObj.id).set({
+            const storagePath = `${mediaObj.id}-${mediaObj.name}`;
+            const upload = await supabaseClient.storage.from('media').upload(storagePath, mediaObj.blob, {
+                contentType: mediaObj.mimeType,
+                upsert: true
+            });
+            if (upload.error) throw upload.error;
+            const { data: publicUrl } = supabaseClient.storage.from('media').getPublicUrl(storagePath);
+            const { error } = await supabaseClient.from('media').upsert({
                 id: mediaObj.id,
                 name: mediaObj.name,
                 type: mediaObj.type,
-                mimeType: mediaObj.mimeType,
+                mime_type: mediaObj.mimeType,
                 caption: mediaObj.caption,
                 timestamp: mediaObj.timestamp,
                 isFavorite: mediaObj.isFavorite,
-                url,
-                storagePath: storageRef.fullPath
+                url: publicUrl.publicUrl,
+                storage_path: storagePath
             });
+            if (error) throw error;
         }
 
         async function loadCloudMedia() {
             if (!cloudIsReady()) return false;
 
-            const snapshot = await firebaseDb.collection('media').orderBy('timestamp', 'desc').get();
-            mediaItems = snapshot.docs.map(doc => doc.data());
+            const { data, error } = await supabaseClient.from('media').select('*').order('timestamp', { ascending: false });
+            if (error) throw error;
+            mediaItems = data.map(item => ({ ...item, mimeType: item.mime_type, storagePath: item.storage_path, isFavorite: item.is_favorite }));
             renderMediaGrid();
             return true;
         }
 
         async function updateCloudMedia(mediaItem) {
             if (!cloudIsReady() || !isAdmin) return;
-            await firebaseDb.collection('media').doc(mediaItem.id).set({
+            await supabaseClient.from('media').update({
                 caption: mediaItem.caption,
-                isFavorite: mediaItem.isFavorite
-            }, { merge: true });
+                is_favorite: mediaItem.isFavorite
+            }).eq('id', mediaItem.id);
         }
 
         async function deleteCloudMedia(mediaItem) {
             if (!cloudIsReady() || !isAdmin) return;
-            await firebaseDb.collection('media').doc(mediaItem.id).delete();
-            if (mediaItem.storagePath) {
-                await firebaseStorage.ref(mediaItem.storagePath).delete().catch(() => {});
-            }
+            await supabaseClient.from('media').delete().eq('id', mediaItem.id);
+            if (mediaItem.storagePath) await supabaseClient.storage.from('media').remove([mediaItem.storagePath]);
         }
 
         async function clearCloudMedia() {
             if (!cloudIsReady() || !isAdmin) return;
-            const snapshot = await firebaseDb.collection('media').get();
-            const batch = firebaseDb.batch();
-            snapshot.docs.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
-            await Promise.all(snapshot.docs.map(doc => {
-                const item = doc.data();
-                return item.storagePath ? firebaseStorage.ref(item.storagePath).delete().catch(() => {}) : null;
-            }));
+            const { data } = await supabaseClient.from('media').select('storage_path');
+            await supabaseClient.from('media').delete().not('id', 'is', null);
+            const paths = (data || []).map(item => item.storage_path).filter(Boolean);
+            if (paths.length) await supabaseClient.storage.from('media').remove(paths);
         }
 
-        function initFirebaseSync() {
-            firebaseAuth.onAuthStateChanged(async (user) => {
-                if (!user) {
-                    cloudUser = null;
-                    isAdmin = false;
-                    updateAdminUI(null);
-                    return;
-                }
-
-                cloudUser = user;
-                isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-                updateAdminUI(user);
-                cloudStateRef = firebaseDb.collection('vaults').doc('mamu-shared-vault');
-
-                cloudStateRef.onSnapshot(async (snapshot) => {
-                    if (!snapshot.exists) {
-                        await saveCloudState();
-                        return;
-                    }
-
-                    const remote = snapshot.data();
-                    applyingRemoteState = true;
-                    if (remote.targetBirthday) {
-                        targetBirthday = remote.targetBirthday;
+        async function applyRemoteState(remote) {
+            applyingRemoteState = true;
+            if (remote.target_birthday) {
+                        targetBirthday = remote.target_birthday;
                         localStorage.setItem('MAMU_TargetBirthday', targetBirthday);
-                    }
+            }
                     if (Array.isArray(remote.milestones)) {
                         milestones = remote.milestones;
                         localStorage.setItem('MAMU_Milestones', JSON.stringify(milestones));
@@ -892,27 +857,50 @@
                         localStorage.setItem('MAMU_Memos', JSON.stringify(memos));
                         renderMemos();
                     }
-                    if (remote.customLetterMsg) {
-                        customLetterMsg = remote.customLetterMsg;
+                    if (remote.custom_letter_msg) {
+                        customLetterMsg = remote.custom_letter_msg;
                         localStorage.setItem('MAMU_LoveLetter', customLetterMsg);
                     }
                     updateCountdown();
                     document.getElementById('letterContentDisplay').textContent = `"${customLetterMsg}"`;
                     applyingRemoteState = false;
-                });
-
-                if (cloudMediaUnsubscribe) cloudMediaUnsubscribe();
-                cloudMediaUnsubscribe = firebaseDb.collection('media').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
-                    mediaItems = snapshot.docs.map(doc => doc.data());
-                    renderMediaGrid();
-                });
-            });
-
-            firebaseAuth.signInAnonymously().catch((error) => {
-                console.error('Firebase authentication failed:', error);
-                showToast('Cloud sync is unavailable. Check Firebase Anonymous Auth.', 'warning');
-            });
         }
+
+        async function initSupabaseSync() {
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            const syncUser = async (user) => {
+                cloudUser = user;
+                isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+                updateAdminUI(user);
+                cloudStateRef = user ? 'mamu-shared-vault' : null;
+                if (!user) return;
+
+                const { data: state } = await supabaseClient.from('vault_state').select('*').eq('id', 'mamu-shared-vault').maybeSingle();
+                if (state) await applyRemoteState(state);
+                if (cloudMediaUnsubscribe) await supabaseClient.removeChannel(cloudMediaUnsubscribe);
+                cloudMediaUnsubscribe = supabaseClient.channel('media-sync')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'media' }, loadCloudMedia)
+                    .subscribe();
+            };
+
+            await syncUser(sessionData.session?.user || null);
+            supabaseClient.auth.onAuthStateChange((_event, session) => syncUser(session?.user || null));
+            if (!sessionData.session) {
+                const { error } = await supabaseClient.auth.signInAnonymously();
+                if (error) {
+                    console.error('Supabase anonymous sign-in failed:', error);
+                    showToast('Cloud sync is unavailable. Enable Anonymous Auth in Supabase.', 'warning');
+                }
+            }
+            supabaseClient.channel('vault-sync')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'vault_state', filter: 'id=eq.mamu-shared-vault' }, async () => {
+                    const { data } = await supabaseClient.from('vault_state').select('*').eq('id', 'mamu-shared-vault').maybeSingle();
+                    if (data) await applyRemoteState(data);
+                })
+                .subscribe();
+        }
+
+        supabaseClient.auth.getSession().catch(error => console.error('Supabase session failed:', error));
 
         /* ==========================================================================
            2. INTERNET AUDIO / LOVE MELODY PLAYER
@@ -1840,7 +1828,7 @@
         window.onload = async function () {
             // Start Canvas Heart Animation Loop
             animateParticles();
-            initFirebaseSync();
+            initSupabaseSync();
 
             // Initialize IndexedDB & Load Media
             try {
