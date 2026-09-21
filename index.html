@@ -589,5 +589,60 @@
             closeModal('modalAddMemo');
         }
     </script>
+    <script>
+    // Supabase Initialization & Auth Flow
+    const SUPABASE_URL = 'https://sveqvfzznzqiruzlwpbz.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Replace with your actual anon key
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let isAdmin = false;
+
+    async function checkUserAuth() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user.email === 'userex157@gmail.com') {
+            setAdminMode(true);
+        }
+        
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session && session.user.email === 'userex157@gmail.com') {
+                setAdminMode(true);
+            } else {
+                setAdminMode(false);
+            }
+        });
+    }
+    checkUserAuth();
+
+    async function handleAuthClick() {
+        if (isAdmin) {
+            await supabaseClient.auth.signOut();
+            setAdminMode(false);
+        } else {
+            const { error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.href,
+                    skipBrowserRedirect: false 
+                }
+            });
+            if (error) alert("Login error: " + error.message);
+        }
+    }
+
+    function setAdminMode(status) {
+        isAdmin = status;
+        document.body.classList.toggle('admin-mode', isAdmin);
+        const btn = document.getElementById('adminAuthButton');
+        if (btn) {
+            if (isAdmin) {
+                btn.innerHTML = 'Sign out Admin';
+                btn.classList.add('bg-rose-200', 'text-rose-800');
+            } else {
+                btn.innerHTML = 'Admin sign in';
+                btn.classList.remove('bg-rose-200', 'text-rose-800');
+            }
+        }
+    }
+</script>
 </body>
 </html>
